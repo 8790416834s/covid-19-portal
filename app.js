@@ -28,6 +28,20 @@ const initializeDbAndServer = async () => {
 };
 initializeDbAndServer();
 
+const convertDbObjectToResponseObject = (dbObject) => {
+  return {
+    stateId: dbObject.state_id,
+    stateName: dbObject.state_name,
+    population: dbObject.population,
+    districtId: dbObject.district_id,
+    districtName: dbObject.district_name,
+    cases: dbObject.cases,
+    cured: dbObject.cured,
+    active: dbObject.active,
+    deaths: dbObject.deaths,
+  };
+};
+
 const authenticateToken = (request, response, next) => {
   let jwtToken;
   const authHeader = request.headers["authorization"];
@@ -79,7 +93,7 @@ app.get("/states/", authenticateToken, async (request, response) => {
                 SELECT * FROM state
                 ORDER BY state_id;`;
   const getStates = await db.all(getStatesQuery);
-  response.send(getStates);
+  response.send(getStates.map((each) => convertDbObjectToResponseObject(each)));
 });
 
 //GET INDIVIDUAL
@@ -89,7 +103,7 @@ app.get("/states/:stateId/", authenticateToken, async (request, response) => {
     SELECT * FROM state
     WHERE state_id = ${stateId};`;
   const getState = await db.get(getStateQuery);
-  response.send(getState);
+  response.send(convertDbObjectToResponseObject(getState));
 });
 
 //POST
@@ -112,7 +126,7 @@ app.get(
     SELECT * FROM district 
     WHERE district_id = ${districtId};`;
     const getDistrict = await db.get(getDistrictQuery);
-    response.send(getDistrict);
+    response.send(convertDbObjectToResponseObject(getDistrict));
   }
 );
 
@@ -157,20 +171,6 @@ app.put(
     response.send("District Details Updated");
   }
 );
-
-const convertDbObjectToResponseObject = (dbObject) => {
-  return {
-    stateId: dbObject.state_id,
-    stateName: dbObject.state_name,
-    population: dbObject.population,
-    districtId: dbObject.district_id,
-    districtName: dbObject.district_name,
-    cases: dbObject.cases,
-    cured: dbObject.cured,
-    active: dbObject.active,
-    deaths: dbObject.deaths,
-  };
-};
 
 //GET TOTAL OF INDIVIDUAL
 app.get(
